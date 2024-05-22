@@ -1,0 +1,235 @@
+comment: |
+  this  is where I can write my notes.
+---
+include:
+  - docassemble.ALToolbox:escape_button.yml
+  # docassemble.AssemblyLine:assembly_line.yml
+  # docassemble.AKA2JBranding:custom_organization.yml
+  # Need to add "Respondent" if they don't know the respondent's name vs. using res_first_name.
+---
+default screen parts:
+  pre: |
+    % if get_config('debug') and not url_args.get("hide_hud", "").lower() in ["1", "on", "true", "yes"]:
+    `id: ${ user_info().question_id }`[BR]
+    `Variable: ${ user_info().variable }`[BR]
+    <div data-variable="${ encode_name(str( user_info().variable )) }" id="sought_variable" aria-hidden="true" style="display: none;"></div>
+    % endif
+---
+mandatory: true
+id: interview order
+code: |
+  introduction
+  def_first_name
+  def_mailing_address
+  path_choice
+  path_a_2
+  path_a_3
+  path_a_4
+  path_a_5
+  path_a_6
+  path_b_6
+  path_a_6_1
+  path_b_6_1
+  path_a_7
+  path_a_8
+  path_a_9
+  target_variable
+---
+id: start screen
+question: |
+  ## ONLINE SECURED CASH BOND POSTING AGREEMENT
+subquestion: |
+  ## How does this work?
+  
+  1. The interview style form will ask you questions and create forms for you.
+  2. Print the forms and file them at the courthouse.
+  3. After the court has your forms, the court clerk will contact you.
+  
+  * You may email a copy to yourself and print it later.
+continue button field: introduction
+---
+features:
+  progress bar: True
+---
+objects:
+  - respondent: Individual
+---
+id: Defendant's Information
+question: |
+  Defendant's Information:
+fields:
+  - First Name: def_first_name
+    required: True
+  - Middle Name: def_mid_name
+    required: False
+  - Last Name: def_last_name
+    required: True
+  - Date of Birth: def_dob
+    required: True
+---
+id: Defendant's Information 2
+question: |
+  Defendant's Information:
+fields:
+  - Mailing Address: def_mailing_address
+    required: True
+  - Email: def_email
+    required: True
+  - Cell Phone: def_cell_phone
+    required: false
+  - Work Phone: def_work_phone
+    required: false
+  - Home Phone: def_home_phone
+    required: false
+---
+id: path A/path B
+question: |
+  I am:
+fields:
+  - no label: path_choice
+    required: True
+    datatype: radio
+    choices:
+      - the defendant posting my own bonds.
+      - someone else posting on the defendant's behalf.
+---
+id: path A - screen 1
+question: |
+  I read the Online Secured Cash Bond Posting Summary (form CR-233) that was sent to me by the court.
+fields:
+  - no label: path_a_2
+    required: True
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+id: path A - screen 2
+question: |
+  I am depositing money as security for my bonds. 
+fields:
+  - no label: path_a_3
+    required: True
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+id: path A - screen 3
+question: |
+  Each credit card transaction is assessed a 3% convenience fee.  If the bond is later returned (exonerated) to me, this fee will not be returned. 
+fields:
+  - no label: path_a_4
+    required: True
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+id: path A - screen 4
+question: |
+  The bonds continue until the court cancels them.
+fields:
+  - no label: path_a_5
+    required: True
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+id: path A - screen 5
+question: |
+  **If I follow** the conditions of the bonds, the court will cancel the bonds. If the court cancels the bonds:
+fields:
+  - no label: path_a_6
+    datatype: radio
+    choices:
+      - the court may use the money I deposit to pay my fine, judgment, or costs.
+      - the court may **not** use the money I deposit to pay my fine, judgment, or costs.
+---
+id: path A - screen 6_1
+question: |
+  #####The court will send me a check for the canceled bond money at the address I provide.  The money will not be refunded on the original credit card used to post the bond.  If I post the bond using another person’s credit card, the refund will go to me, not the holder of the credit card.  I am responsible for telling the credit card holder about this before I pay the bond. 
+fields:
+  - no label: path_a_6_1
+    required: True
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+---
+id: path B - screen 5
+question: |
+  **If the defendant** follows the conditions of the bonds, the court will cancel the bonds. If the court cancels the bonds:
+fields:
+  - no label: path_b_6
+    datatype: radio
+    choices:
+      - the court may use the money I deposit to pay my fine, judgment, or costs.
+      - the court may **not** use the money I deposit to pay my fine, judgment, or costs.
+---
+id: path B - screen 6_1
+question: |
+  #####The court will send me a check for the canceled bond money at the address I provide.  The money will **not** be refunded on the original credit card used to post the bond.  If I post the bond using another person’s credit card, the refund will go to me, not the holder of the credit card.  I am responsible for telling the credit card holder about this before I pay the bond. 
+fields:
+  - no label: path_b_6_1
+    required: True
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+id: path A - screen 6
+question: |
+  **If I do not follow** the conditions of the bonds, the court will forfeit the money to the State of Alaska.  The court will send me notice of forfeiture to the mailing or email address I provide. 
+fields:
+  - no label: path_a_7
+    required: True
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+id: path B - screen 6
+question: |
+  **If the defendant does not follow** the conditions of the bonds, the court will forfeit the money to the State of Alaska.  The court will send me notice of forfeiture to the mailing or email address I provide. 
+fields:
+  - no label: path_b_7
+    required: True
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+id: path A - screen 7
+question: |
+  If I am in custody, the jail will not release me until the full bond amount has been posted for every case that has a bond requirement.  The court will only notify the jail of bond payments made during [online bail processing hours](https://courts.alaska.gov/trialcourts/bail.htm).  It may take the jail a few hours after notification from the court to release me.
+fields:
+  - no label: path_a_8
+    required: True
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+id: path B - screen 7
+question: |
+  If the defendant is in custody, the jail will not release them until the full bond amount has been posted for every case that has a bond requirement.  The court will only notify the jail of bond payments made during [online bail processing hours](https://courts.alaska.gov/trialcourts/bail.htm).  It may take the jail a few hours after notification from the court to release the defendant.
+fields:
+  - no label: path_b_8
+    required: True
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+id: path A - screen 8
+question: |
+	I will tell the court in writing if my email, phone number, or mailing address changes. [Use form [TF-955](https://public.courts.alaska.gov/web/forms/docs/TF-955.pdf).]
+fields:
+  - no label: path_a_9
+    required: True
+    datatype: radio
+    choices:
+      - I understand and agree.
+---
+question: |
+  Sign your name
+subquestion: |
+  By signing your name, you agree that all information you provided in this interview is true to the best of your knowledge.
+signature: target_variable
+pen color: "#33f"
+under: |
+
+---
