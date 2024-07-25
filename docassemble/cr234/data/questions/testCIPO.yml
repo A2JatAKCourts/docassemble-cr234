@@ -1,0 +1,576 @@
+comment: |
+  this  is where I can write my notes.
+---
+include:
+  - docassemble.ALToolbox:escape_button.yml
+  # docassemble.AssemblyLine:assembly_line.yml
+  # docassemble.AKA2JBranding:custom_organization.yml
+  # Need to add "Respondent" if they don't know the respondent's name vs. using res_first_name.
+---
+default screen parts:
+  pre: |
+    % if get_config('debug') and not url_args.get("hide_hud", "").lower() in ["1", "on", "true", "yes"]:
+    `id: ${ user_info().question_id }`[BR]
+    `Variable: ${ user_info().variable }`[BR]
+    <div data-variable="${ encode_name(str( user_info().variable )) }" id="sought_variable" aria-hidden="true" style="display: none;"></div>
+    % endif
+---
+mandatory: true
+id: interview order
+code: |
+  introduction
+  protection_self
+  protection_children 
+  if protection_self == False and protection_children == False:
+    kickout
+  if protection_children == True:
+    children.there_are_any = True
+    children.gather()
+  res_first_name  
+  if relationship_to_res.all_false():
+    know_res
+    know_res2
+  judge_order_requests
+  order_type
+  res_knows_about_order
+  if res_sa == False:
+    res_stalked
+  res_actions_injured
+  if res_actions_injure_family == True:
+    family.there_are_any = True
+    family.gather()
+  if tell_res_no_contact == True:
+    describe_communication
+  describe_stalking
+  describe_need
+  orders_limiting_contact_info
+  request_orders
+  residence_stay_away_st
+  if residence_res_lives_st == False:
+    residence_confidential
+  respondents_address
+  school_stay_away_st
+  if school_stay_away_st == True:
+    school_distance
+  school_kids_stay_away_st
+  if school_kids_stay_away_st == True:
+    school_kids_distance
+  phone_contact_safe
+  text_contact_safe_stalking
+  email_contact_safe_stalking
+  person_contact_safe_stalking
+  petitioner_address
+  workplace_stay_away_stalking
+---
+id: start screen
+question: |
+  # CIVIL PROTECTIVE ORDER
+  * If you are in danger now, call 911.
+  * Use this form to ask a judge for a domestic violence, stalking, or sexual assault civil protective order in Alaska. 
+
+subquestion: |
+  ## How does this work?
+  
+  
+  1. The interview style form will ask you questions and create forms for you.
+  2. Print the forms and file them at the courthouse.
+  3. After the court has your forms, the court clerk will contact you.
+  
+  * Print your forms in a safe location such as a domestic violence shelter.
+  * You may email a copy to yourself and print it later.
+  * Click [here](https://www.techsafety.org/internetbrowserprivacytips) for more information about tech safety.
+continue button field: introduction
+---
+features:
+  progress bar: True
+---
+comment: |
+  testing the comment block
+id: protection for petitioner
+question: |
+  Do you need protection from somebody?
+yesno: protection_self
+---
+code: |
+  children.gather()
+---
+objects:
+  - children: DAList.using(object_type=Individual)
+---
+id: protection for children
+question: |
+  Do any children need protection?
+yesno: protection_children
+---
+id: childrens name
+question: |
+  What is the ${ordinal(i)} child's name?
+fields:
+  - First name: children[i].name.first
+    hint: TEST
+  - Last name: children[i].name.last
+---
+id: more children
+question: |
+  Do any more children need protection?
+yesno: children.there_is_another
+---
+code: |
+  # Need to add an else/if. If they select no to both questions above, then a screen comes up indicating this is likely not the correct form. Below, if they are related, then ask if they know resondent name. if they do, then respondent name fields pop up.
+---
+id: Incorrect Form Kickout
+event: kickout
+question: |
+  Based on your answer to one or more of the previous questions, this is likely not the form you need.  Please contact the Alaska Court System if you are unsure which form to fill out for your request.  A directory of court locations and phone numbers can be found [here](http://courts.alaska.gov/courtdir/index.htm), and a full list of our publicly available forms can be found [here](http://courts.alaska.gov/forms/index.htm).  Note that many of our forms are only available in fillable PDF format at this time.
+---
+objects:
+  - respondent: Individual
+---
+id: protection from
+question: |
+  Who do you need protection from?
+subquestion: |
+  Include as much information as posible:
+fields:
+  - First Name: res_first_name_known
+    required: True
+  - Middle Name: res_mid_name
+    required: False
+  - Last Name: res_last_name
+    required: False
+  - List any Nicknames: res_nicknames
+    required: False
+  - Date of Birth: res_dob
+    required: False
+---
+code: |
+  if res_first_name_known == '':
+    res_first_name = "the person you need protection from"
+  else:
+    res_first_name = res_first_name_known
+---
+id: relationship to respondent
+question: |
+  How are you related to ${ res_first_name }?
+fields:
+  - no label: relationship_to_res
+    datatype: checkboxes
+    choices:
+      - Married to each other now or in the past
+      - Child together
+      - Dated or had a sexual relationship but did not live together
+      - Lived together but did not date or have a sexual relationship
+      - Lived together and dated or had a sexual relationship
+      - Related by marriage (such as in-laws)
+      - I am a child of a person in a relationship described above
+      - Related by blood or adoption
+      # add an empty text box after the last option
+      # if they select "none of the above" then go to "how do you know them" choice screen
+subquestion: |
+  **Check all that apply:**
+---
+id: acquainted with respondent
+question: |
+  How do you know ${ res_first_name }?
+fields:
+  - no label: know_res
+    datatype: checkboxes
+    choices:
+      - ${ res_first_name } is my (former) friend
+      - ${ res_first_name } is my neighbor, landlord, or tenant (not living together)
+      - ${ res_first_name } is my classmate
+      - ${ res_first_name } is my ex's current partner
+      - ${ res_first_name } is the ex of my current partner
+      - ${ res_first_name } is the partner or ex-partner of one of my family members
+subquestion: |
+  **Check all that apply:**
+---
+id: acquainted with respondent 2
+question: |
+  How do you know ${ res_first_name }?
+fields:
+  - no label: know_res2
+    datatype: checkboxes
+    choices:
+      - ${ res_first_name } is my legal guardian
+      - ${ res_first_name } is my client or former client
+      - ${ res_first_name } is my co-worker or employer
+      - ${ res_first_name } is a correctional facility employee, police officer, or probation officer
+      - I do not know and have never been acquainted with ${ res_first_name }
+      - other
+    none of the above: False
+  - How do you know ${ res_first_name }?: know_res2_other
+    js show if:
+      val("know_res2['other']")
+subquestion: |
+  **Check all that apply:**
+---
+id: sign post protective order type
+question: |
+  ## Next we will ask you:
+  * what type of protective order you need and
+  * questions about what you want the judge to order. 
+continue button field: judge_order_requests
+---
+id: type of protective order
+question: |
+  What type of protective order do you need?
+field: order_type
+buttons:
+  - 20 Day Order: 20_day_order
+  - 1 Year Order: 1_year_order
+  - Both: both_order_types
+subquestion: |
+  * **20 Day Order:**  If granted, a 20 day (short term) order can start right away without telling the person you want protection from. 
+  * **1 Year Order:**  This order can only be issued after notice to Respondent and a court hearing. This order will last for one year, unless the court ends it sooner.  The police will notify Respondent of the hearing. 
+  * **Both:**  If there is any chance you will need protection for more than 20 days, you should request both an ex parte (20-day) order and long-term (one-year) order.
+---
+id: notified respondent
+question:
+  Did you tell ${ res_first_name } that you are asking for a protective order?
+  # certify to the court in writing the efforts if any made to provide notice to ${ res_first_name }
+subquestion:
+  You are not required to notify ${ res_first_name }.
+fields:
+  - no label: res_knows_about_order
+    datatype: yesnoradio
+  - note: How did you notify ${ res_first_name } about the protective order?
+    show if: res_knows_about_order
+  - no label: order_knows
+    input type: area
+    required: True
+    show if: res_knows_about_order
+  # you are not required to tell them you are asking for a pro Order.
+---
+id: SA main screen
+question: |
+  ${ capitalize(res_first_name) } is the "respondent," did they sexually assault you?
+yesno: res_sa
+subquestion: |
+  “Sexual assault” under AS 11.41.410-450 includes (but is not limited to) sexual penetration or sexual contact:
+  * without your consent
+  * after you were coerced into giving consent (for example: you were threatened with violence if you said no)
+  * when you are not able to give consent (for example: due to incompetency, being unconscious or asleep, being under the influence of drugs or alcohol)
+  * when you were unaware of the sexual act (for example: during a medical exam)
+  * by a jail employee, DHSS employee, probation/parole officer, or police officer when you were under that person’s supervision or custody, or under arrest
+  * if you were younger than 13 years old
+  * if you were younger than 16 years old and the respondent is more than four years older than you
+  * when you were 16 or 17 years old and the respondent had a position of authority over you (for example: a guardian, teacher, religious leader, employer, or coach)
+  “Sexual penetration” means vaginal, anal, or oral sex; or inserting any body part or object into your genitals or anus.
+  “Sexual contact” includes (but is not limited to) touching your genitals or anus, causing you to touch the respondent’s genitals or anus, or causing you to come in contact with semen.
+---
+id: main stalking screen
+question: |
+  ${ capitalize(res_first_name) } is the "respondent," did they "stalk" you?
+yesno: res_stalked
+subquestion: |
+  “Stalking” under AS 11.41.260-270 means that the respondent knowingly made “nonconsensual contact” with you two or more times, **and** that because of these contacts, you were reasonably afraid of death or physical injury, or the death or physical injury of a family member.
+  
+  “Contact” includes many things (not all of them are listed here). Examples are- calling you, messaging you on social media, following you, going onto your property, leaving objects for you, tracking you with GPS, hacking your phone
+  
+  “Nonconsensual contact” means -
+  
+  * Contact that you did not specifically agree to, or is not reasonable under generally accepted social norms
+  * Contact that you agreed to at first, but it continued after you told the respondent you no longer wanted it
+  * Contact that goes beyond what you agreed to Note- If there is back-and-forth conversation or argument between you and the respondent, it is usually not considered nonconsensual contact, even if the conversation is negative
+---
+id: SA main screen
+question: |
+  ${ capitalize(res_first_name) } is the "respondent," did they sexually assault you?
+yesno: res_sa
+subquestion: |
+  ONlY show this question if they select NO for stalking?  or can it both be staalking and sexual assault? Need to replace the stalking info with sexual assault info here “Stalking” under AS 11.41.260-270 means that the respondent knowingly made “nonconsensual contact” with you two or more times, **and** that because of these contacts, you were reasonably afraid of death or physical injury, or the death or physical injury of a family member.
+  
+  “Contact” includes many things (not all of them are listed here). Examples are- calling you, messaging you on social media, following you, going onto your property, leaving objects for you, tracking you with GPS, hacking your phone
+  
+  “Nonconsensual contact” means -
+  
+  * Contact that you did not specifically agree to, or is not reasonable under generally accepted social norms
+  * Contact that you agreed to at first, but it continued after you told the respondent you no longer wanted it
+  * Contact that goes beyond what you agreed to Note- If there is back-and-forth conversation or argument between you and the respondent, it is usually not considered nonconsensual contact, even if the conversation is negative
+---
+id: afraid of harm
+question: |
+  % if res_first_name_known == '':
+  Did the actions of ${ res_first_name } make you afraid that you would be physically injured or killed?
+  % else:
+  Did ${ res_first_name }'s actions make you afraid that you would be physically injured or killed?
+  % endif
+yesno: res_actions_injured
+---
+id: afraid of harm-family
+question: |
+  % if res_first_name_known == '':
+  Did the actions of ${ res_first_name } make you afraid that a family member would be killed or physically injured?
+  % else:
+  Did ${ res_first_name }'s actions make you afraid that a family member would be killed or physically injured?
+  % endif
+yesno: res_actions_injure_family
+---
+code: |
+  family.gather()
+---
+objects:
+  - family: DAList.using(object_type=Individual)
+---
+id: family protection
+question: |
+  Do any family members need protection?
+yesno: family.there_are_any
+---
+id: family relationship
+question: |
+  What is the ${ordinal(i)} family members name and relationship to you?
+fields:
+  - First name: family[i].name.first
+  - Last name: family[i].name.last
+  - Relationship to me: family[i].relationship
+---
+id: additional family
+question: |
+  Do any more family members need protection?
+yesno: family.there_is_another
+---
+id: no contact requested
+question: |
+  Did you specifically tell ${ res_first_name } not to have contact with you?
+# this comes across harsh or insensitive.  Suggest rewording.
+yesno: tell_res_no_contact
+---
+id: communication w/respondent
+question: |
+  Describe how you let ${ res_first_name } know not to have contact with you.
+fields:
+  - no label: describe_communication
+    input type: area
+subquestion: |
+  Include date/time and how you communicated this to ${ res_first_name }
+--- 
+id: stalking description
+question: |
+  Describe the stalking/nonconsensual contact.
+fields:
+  - no label: describe_stalking
+    input type: area
+subquestion: |
+  Include date/time and places.
+--- 
+id: PO needed for safety
+question: |
+  Describe why a protective order is necessary to keep you safe from future stalking:
+fields:
+  - no label: describe_need
+    input type: area
+--- 
+id: orders limiting contact
+question: |
+  # Orders to Limit Contact
+  * The judge can order that ${res_first_name} not contact you in any way directly or indirectly. 
+  * Or the judge can order some limited contact if you think it would be safe.<br><br>
+  **Important to Note**: Even if you ask for no contact, the judge may order limited contact if it can be safe. Think about times that might come up where some contact may be needed (school, work, church, bills, etc.).
+continue button field: orders_limiting_contact_info
+---
+id: no following
+question: |
+  I request an order from the court directing ${res_first_name}:
+fields:
+  - no label: request_orders
+    datatype: checkboxes
+    choices:
+      - not to follow, approach, confront, watch, or stalk me in any other way, or threaten to do so.
+      - not to contact me by telephone, text message, email, social media messaging, U.S. mail, or otherwise communicate directly or indirectly by any means with me.
+      - not to contact members of my household by telephone, text message, email, social media messaging, U.S. mail, or otherwise communicate directly or indirectly by any means with them.
+    none of the above: False
+  - Household members name: household_members_ST
+    js show if:
+      val("request_orders['not to contact members of my household by telephone, text message, email, social media messaging, U.S. mail, or otherwise communicate directly or indirectly by any means with them.']")
+subquestion: |
+  **Check all that apply:**
+---
+id: stay away - residence
+question: |
+  Do you want the judge to order ${ res_first_name } to stay away from **the place you live**?
+fields:
+  - no label: residence_stay_away_st
+    datatype: yesnoradio
+  - Does ${ res_first_name } know where you live?: residence_res_lives_st
+    datatype: yesnoradio
+    show if: residence_stay_away_st 
+  - Does ${ res_first_name } live here?: respondent_knows_lives_st
+    datatype: yesnoradio
+    show if: residence_res_lives_st
+---
+id: confidential address
+question: |
+  Do you want the place you live to remain confidential?
+fields:
+  - no label: residence_confidential
+    datatype: yesnoradio
+  - Address: confidential_address
+    input type: textfield
+    show if:
+      variable: residence_confidential
+      is: false 
+subquestion: |
+  **Important:** if you list your address the judge can order ${ res_first_name } to stay away from it. Your address will not be confidential if it is listed on the court order.
+---
+id: respondent's address
+question: |
+  Do you know where ${ res_first_name } lives?
+fields:
+  - no label: respondents_address
+    datatype: radio
+    choices:  
+      - no
+      - in the same building as my residence
+      - I know the address
+      - I know the general area
+  - ${ res_first_name }'s address: respondents_address_2
+    input type: textfield
+    show if:
+      variable: respondents_address
+      is: I know the address
+  - Describe: respondents_address_3
+    input type: textfield
+    show if:
+      variable: respondents_address
+      is: I know the general area
+---
+id: stay away - school
+question: |
+  Do you want the judge to order ${ res_first_name } to stay away from **the school** you go to?
+fields:
+  - no label: school_stay_away_st
+    datatype: yesnoradio
+  - What is your school's address?: school_address
+    input type: area
+    hint: Enter your school address here
+    show if: school_stay_away_st
+  - Does ${ res_first_name } go here?: repondent_school
+    datatype: yesnoradio
+    show if: school_stay_away_st
+---
+id: stay away - school 2
+question: |
+  What distance should ${ res_first_name} stay from your school?
+fields:
+  - no label: school_distance
+    hint: type distance in feet or miles
+---
+id: stay away - kids school
+question: |
+  Do you want the judge to order ${ res_first_name } to stay away from **your child(ren)'s school**?
+fields:
+  - no label: school_kids_stay_away_st
+    datatype: yesnoradio
+  - What is the school's address?: school_kids_address
+    input type: area
+    hint: Enter school address here
+    show if: school_Kids_stay_away_st
+  - Does ${ res_first_name } also have a child or children at this school?: repondent_kids__school
+    datatype: yesnoradio
+    show if: school_kids_stay_away_st
+---
+id: stay away - kids school 2
+question: |
+  What distance should ${ res_first_name} stay from your child(ren)'s school?
+fields:
+  - no label: school_kids_distance
+    hint: type distance in feet or miles
+---
+id: phone contact
+question: |
+  Would contact be safe by **phone**?
+fields:
+  - no label: phone_contact_safe
+    datatype: yesnoradio
+  - Phone number: safe_phone_stalking
+    required: True
+    show if: phone_contact_safe
+  - Describe the hours and topic of phone contact that is safe.: safe_phone_stalking_description
+    input type: area
+    required: True
+    show if: phone_contact_safe
+---
+id: text contact
+question: |
+  Would contact be safe by **text**?
+fields:
+  - no label: text_contact_safe_stalking
+    datatype: yesnoradio
+  - Phone number: safe_text_stalking
+    required: True
+    show if: text_contact_safe_stalking
+  - Describe the hours and topic of text contact that is safe.: safe_text_stalking_description
+    input type: area
+    required: True
+    show if: text_contact_safe_stalking
+---
+id: email contact
+question: |
+  Would contact be safe by **email**?
+#test using the hint function for labeling
+fields:
+  - no label: email_contact_safe_stalking
+    datatype: yesnoradio
+  - no label: safe_email_stalking
+    hint: Enter safe email address.
+    required: True
+    show if: email_contact_safe_stalking
+  - no label: safe_text_stalking_description
+    input type: area
+    hint: Describe the hours and topic of email contact that is safe.
+    required: True
+    show if: email_contact_safe_stalking
+---
+id: another person contact
+question: |
+  Would contact be safe **through another person**?
+#test using the hint function for labeling
+fields:
+  - no label: person_contact_safe_stalking
+    datatype: yesnoradio
+  - no label: safe_person_stalking
+    hint: Type the name of the person here. 
+    required: True
+    show if: person_contact_safe_stalking
+  - no label: safe_person_stalking_description
+    input type: area
+    hint:  If you want to limit this contact, describe it here.
+    required: True
+    show if: person_contact_safe_stalking
+---
+id: petitoner address
+question: |
+  What is your address?
+fields:
+ - no label: petitioner_address
+   datatype: area
+   hint: Enter your address here.
+ - Do you want your address to be confidential?: confidential_address
+   datatype: yesnoradio
+---
+question: |
+  Let us know how to contact you about any upcoming hearing. The court will keep your license and SSN information confidential.
+fields:
+  - birthdate: birthday
+    datatype: date
+---
+question: |
+  Results
+subquestion: |
+  Thank you, ${user_first_name}.
+  
+  We will send your results to Dewey, Cheatem and Howe.
+---
+template: email_contents
+content: |
+  Here is the intake
+  
+  First name: ${ user_first_name }  
+  Last name: ${ user_last_name }
+
+  Birthdate: ${birthday}
+---
+code: |
+  send_email(to="dewey@example.com", template=email_contents)
